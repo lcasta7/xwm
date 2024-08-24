@@ -17,7 +17,6 @@ type LinkedList[T comparable] struct {
 	Size    int
 }
 
-
 // New constructs and returns an empty doubly linked-list.
 // time-complexity: O(1)
 func NewList[T comparable]() LinkedList[T] {
@@ -66,20 +65,43 @@ func (d *LinkedList[T]) IsLast(node *Node[T]) bool {
 // AddBetween constructs a new node out of the given data and inserts it between the given two nodes.
 // and returns the newly inserted node
 // time-complexity: O(1)
-func (d *LinkedList[T]) AddBetween(data T, predecessor *Node[T], successor *Node[T]) *Node[T] {
+func (d *LinkedList[T]) AddBetween(data T, predecessor *Node[T], successor *Node[T]) (*Node[T], *LinkedList[T]) {
 	n := &Node[T]{Data: data, Next: successor, Prev: predecessor}
 
-	predecessor.Next = n
-	successor.Prev = n
+	if predecessor != nil {
+		predecessor.Next = n
+	} else {
+		// If predecessor is nil, n becomes the new head
+		d.header.Next = n
+	}
+
+	if successor != nil {
+		successor.Prev = n
+	} else {
+		// If successor is nil, n becomes the new tail
+		d.trailer.Next = n
+	}
 
 	d.Size++
-	return n
+	return n, d
+}
+
+func (d *LinkedList[T]) InsertPrev(data T, current *Node[T]) (*Node[T], *LinkedList[T]) {
+	n := &Node[T]{Data: data, Next: nil, Prev: nil}
+
+	n.Next = current
+	n.Prev = current.Prev
+	current.Prev = n
+
+	return n, d
+
 }
 
 // AddFirst adds a new node to the beginning of the list.
 // time-complexity: O(1)
 func (d *LinkedList[T]) AddFirst(data T) *Node[T] {
-	return d.AddBetween(data, d.header, d.header.Next)
+	new_node, _ := d.AddBetween(data, d.header, d.header.Next)
+	return new_node
 }
 
 // AddLast adds a new node to the end of the list.
@@ -94,8 +116,19 @@ func (d *LinkedList[T]) Remove(n *Node[T]) T {
 	predecessor := n.Prev
 	successor := n.Next
 
-	predecessor.Next = successor
-	successor.Prev = predecessor
+	if predecessor != nil {
+		predecessor.Next = successor
+	} else {
+		// If n is the head node, update the head pointer
+		d.header.Next = successor
+	}
+
+	if successor != nil {
+		successor.Prev = predecessor
+	} else {
+		// If n is the tail node, update the tail pointer
+		d.trailer.Next = predecessor
+	}
 
 	n.Next = nil
 	n.Prev = nil
@@ -105,19 +138,40 @@ func (d *LinkedList[T]) Remove(n *Node[T]) T {
 	return n.Data
 }
 
-func (d *LinkedList[T]) RemoveFirstFound(e T) (*LinkedList[T], *Node[T]){
-				current_node := d.header.Next
+func (d *LinkedList[T]) RemoveFirstFound(e T) (*LinkedList[T], *Node[T]) {
+	current_node := d.header.Next
 
-				for {
-								if current_node.Data == e {
-												d.Remove(current_node)
-												current_node = current_node.Next
-												break
-								}
-								current_node = current_node.Next
-				}
+	for {
+		if current_node == nil {
+			break
+		}
+		if current_node.Data == e {
+			prev_node := current_node.Prev
+			next_node := current_node.Next
 
-				return d, current_node
+			// Update the pointers
+			if prev_node != nil {
+				prev_node.Next = next_node
+			} else {
+				// If there's no previous node, this is the head node
+				d.header.Next = next_node
+			}
+
+			if next_node != nil {
+				next_node.Prev = prev_node
+			} else {
+				// If there's no next node, this is the tail node
+				d.trailer.Next = prev_node
+			}
+
+			// Remove the current node
+			d.Remove(current_node)
+			break
+		}
+		current_node = current_node.Next
+	}
+
+	return d, current_node
 }
 
 // RemoveFirst removes and returns the first element of the list. It returns false if the list is empty.

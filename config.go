@@ -9,7 +9,7 @@ import (
 )
 
 var app_codes = map[xproto.Keycode]string{
-	69: "obsidian",
+	69: "vivaldi-stable",
 }
 
 func ClearApps(actual_window_ids []xproto.Window, apps map[string]*app_collection) map[string]*app_collection {

@@ -20,10 +20,12 @@ type app_collection struct {
 	current    *Node[xproto.Window]
 	collection *LinkedList[xproto.Window]
 }
+
 var (
-	mu   sync.Mutex 
-	apps map[string]*app_collection 
+	mu   sync.Mutex
+	apps map[string]*app_collection
 )
+
 func main() {
 
 	conn, err := xgb.NewConn()
@@ -116,7 +118,7 @@ func main() {
 								tidyUp := func(wg *sync.WaitGroup) {
 									defer wg.Done()
 									mu.Lock()
-									time.Sleep(2 * time.Second)
+									time.Sleep(3 * time.Second)
 									TidyUp(GetActualWindowIds(conn, root), apps)
 									mu.Unlock()
 								}
@@ -138,7 +140,7 @@ func main() {
 				cleanUp := func(wg *sync.WaitGroup) {
 					defer wg.Done()
 					mu.Lock()
-					time.Sleep(1 * time.Second)
+					time.Sleep(2 * time.Second)
 					apps = ClearApps(GetActualWindowIds(conn, root), apps)
 					mu.Unlock()
 				}
@@ -151,11 +153,15 @@ func main() {
 				app := &app{win: last_launched, win_id: event.Window}
 
 				if app_col, exists := apps[app.win]; exists {
-					new_node := app_col.collection.AddBetween(app.win_id,
+
+					new_node, new_collection := app_col.collection.AddBetween(app.win_id,
 						app_col.current.Prev,
 						app_col.current)
 
 					app_col.current = new_node
+					app_col.collection = new_collection
+
+					apps[app.win] = app_col
 				} else {
 					new_collection := NewList[xproto.Window]()
 					new_group := &app_collection{
