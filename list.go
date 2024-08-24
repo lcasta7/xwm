@@ -5,13 +5,13 @@ import (
 	"strings"
 )
 
-type Node[T any] struct {
+type Node[T comparable] struct {
 	Data T
 	Prev *Node[T]
 	Next *Node[T]
 }
 
-type LinkedList[T any] struct {
+type LinkedList[T comparable] struct {
 	header  *Node[T] // header.Next is the first node in the list.
 	trailer *Node[T] // trailer.Prev is the last node in the list.
 	Size    int
@@ -20,7 +20,7 @@ type LinkedList[T any] struct {
 
 // New constructs and returns an empty doubly linked-list.
 // time-complexity: O(1)
-func NewList[T any]() LinkedList[T] {
+func NewList[T comparable]() LinkedList[T] {
 	var d LinkedList[T]
 
 	d.header = &Node[T]{}
@@ -105,9 +105,24 @@ func (d *LinkedList[T]) Remove(n *Node[T]) T {
 	return n.Data
 }
 
+func (d *LinkedList[T]) RemoveFirstFound(e T) (*LinkedList[T], *Node[T]){
+				current_node := d.header.Next
+
+				for {
+								if current_node.Data == e {
+												d.Remove(current_node)
+												current_node = current_node.Next
+												break
+								}
+								current_node = current_node.Next
+				}
+
+				return d, current_node
+}
+
 // RemoveFirst removes and returns the first element of the list. It returns false if the list is empty.
 // time-complexity: O(1)
-func (d *LinkedList[T]) RemoveFirst() (data T, ok bool) {
+func (d *LinkedList[T]) RemoveFirste() (data T, ok bool) {
 	if d.IsEmpty() {
 		return
 	}
