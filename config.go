@@ -10,22 +10,28 @@ import (
 
 var app_codes = map[xproto.Keycode]string{
 	69: "vivaldi-stable",
+	65: "emacs",
 }
 
-func ClearApps(actual_window_ids []xproto.Window, apps map[string]*app_collection) map[string]*app_collection {
+func ClearApps(actual_window_ids []xproto.Window, apps map[string]*app_collection, deletedWin xproto.Window) map[string]*app_collection {
 
-	keys_to_delete := []xproto.Window{}
+	log.Printf("Starting ClearApps Job")
+	if len(apps) == 0 {
+		log.Printf("no apps to clean\n")
+		return apps
+	}
 
+	//make a copy of the apps
 	temp_apps := make(map[string]*app_collection)
 	for k, v := range apps {
 		temp_apps[k] = v
 	}
 
-	if len(apps) == 0 {
-		return apps
-	}
-
+	keys_to_delete := []xproto.Window{}
 	for _, v := range apps {
+		if v.collection != nil {
+			continue
+		}
 		app_list := v.collection.ToSlice()
 		for _, app := range app_list {
 			if !slices.Contains(actual_window_ids, app) {
@@ -34,6 +40,10 @@ func ClearApps(actual_window_ids []xproto.Window, apps map[string]*app_collectio
 		}
 	}
 
+	//need to change current
+	keys_to_delete = append(keys_to_delete, deletedWin)
+
+	//delete the keys
 	for k, v := range temp_apps {
 		for _, to_delete_app := range keys_to_delete {
 			temp_list, temp_node := v.collection.RemoveFirstFound(to_delete_app)
@@ -74,12 +84,16 @@ func GetActualWindowIds(conn *xgb.Conn, root xproto.Window) []xproto.Window {
 
 func TidyUp(actual_window_ids []xproto.Window, apps map[string]*app_collection) []xproto.Window {
 
+	log.Printf("Starting TidyUp Job")
 	for _, v := range apps {
 		// this can probably be simplified
-		for v.current != nil && v.current.Next != nil && !v.collection.IsLast(v.current) {
+		for v.current != nil &&
+			v.current.Next != nil &&
+			!v.collection.IsLast(v.current) {
 			if !slices.Contains(actual_window_ids, v.current.Data) {
 				old_node := v.current
 				v.current = v.current.Next
+				v.current.Prev = old_node.Prev
 				v.collection.Remove(old_node)
 			} else {
 				v.current = v.current.Next

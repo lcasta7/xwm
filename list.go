@@ -66,7 +66,7 @@ func (d *LinkedList[T]) IsLast(node *Node[T]) bool {
 // and returns the newly inserted node
 // time-complexity: O(1)
 func (d *LinkedList[T]) AddBetween(data T, predecessor *Node[T], successor *Node[T]) (*Node[T], *LinkedList[T]) {
-	n := &Node[T]{Data: data, Next: successor, Prev: predecessor}
+	n := &Node[T]{Data: data, Prev: predecessor, Next: successor}
 
 	if predecessor != nil {
 		predecessor.Next = n
@@ -80,6 +80,10 @@ func (d *LinkedList[T]) AddBetween(data T, predecessor *Node[T], successor *Node
 	} else {
 		// If successor is nil, n becomes the new tail
 		d.trailer.Next = n
+	}
+
+	if d.IsLast(successor) {
+		successor.Next = n
 	}
 
 	d.Size++
@@ -139,39 +143,64 @@ func (d *LinkedList[T]) Remove(n *Node[T]) T {
 }
 
 func (d *LinkedList[T]) RemoveFirstFound(e T) (*LinkedList[T], *Node[T]) {
-	current_node := d.header.Next
+    current_node := d.header.Next
 
-	for {
-		if current_node == nil {
-			break
-		}
-		if current_node.Data == e {
-			prev_node := current_node.Prev
-			next_node := current_node.Next
+    if current_node == nil {
+        // The list is empty
+        return d, nil
+    }
 
-			// Update the pointers
-			if prev_node != nil {
-				prev_node.Next = next_node
-			} else {
-				// If there's no previous node, this is the head node
-				d.header.Next = next_node
-			}
+    for {
+        if current_node.Data == e {
+            // Determine the next node before removal
+            next_node := current_node.Next
 
-			if next_node != nil {
-				next_node.Prev = prev_node
-			} else {
-				// If there's no next node, this is the tail node
-				d.trailer.Next = prev_node
-			}
+            prev_node := current_node.Prev
 
-			// Remove the current node
-			d.Remove(current_node)
-			break
-		}
-		current_node = current_node.Next
-	}
+            // Update the pointers
+            if prev_node != nil {
+                prev_node.Next = next_node
+            } else {
+                // If there's no previous node, this is the head node
+                d.header.Next = next_node
+            }
 
-	return d, current_node
+            if next_node != nil {
+                next_node.Prev = prev_node
+            } else {
+                // If there's no next node, this is the tail node
+                d.trailer.Prev = prev_node
+            }
+
+            // Handle the circular nature
+            if current_node == d.header.Next {
+                d.header.Next = next_node
+                if d.header.Next == d.header {
+                    // List is now empty
+                    d.header.Next = nil
+                    d.trailer.Prev = nil
+                }
+            }
+            if current_node == d.trailer.Prev {
+                d.trailer.Prev = prev_node
+            }
+
+            // Remove the current node
+            d.Remove(current_node)
+
+            // Return the next available node after removal
+            return d, next_node
+        }
+
+        current_node = current_node.Next
+
+        // If we are back at the header, the element was not found
+        if current_node == d.header.Next {
+            break
+        }
+    }
+
+    return d, nil
 }
 
 // RemoveFirst removes and returns the first element of the list. It returns false if the list is empty.
