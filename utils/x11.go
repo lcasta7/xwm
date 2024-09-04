@@ -107,13 +107,15 @@ func (x *X11Interface) GetCurrentlyFocused() xproto.Window {
 
 }
 
-func (x *X11Interface) ChangeWindow(window xproto.Window) {
-	focusWindow(x.conn, window)
-	centerMouseOnWindow(x.conn, window)
-	raiseWindow(x.conn, window)
+func (x *X11Interface) ChangeWindow(window xproto.Window) bool {
+	focused := focusWindow(x.conn, window)
+	centered := centerMouseOnWindow(x.conn, window)
+	raised := raiseWindow(x.conn, window)
+
+	return focused && centered && raised
 }
 
-func focusWindow(conn *xgb.Conn, window xproto.Window) {
+func focusWindow(conn *xgb.Conn, window xproto.Window) bool {
 	// Set the input focus to the specified window
 	err := xproto.SetInputFocusChecked(
 		conn,
@@ -123,15 +125,17 @@ func focusWindow(conn *xgb.Conn, window xproto.Window) {
 	).Check()
 
 	if err != nil {
-		log.Printf("focus %v", err)
+		return false
 	}
+
+	return true
 }
 
-func centerMouseOnWindow(conn *xgb.Conn, window xproto.Window) {
+func centerMouseOnWindow(conn *xgb.Conn, window xproto.Window) bool {
 	// Get the geometry of the window (position, size, etc.)
 	geo, err := xproto.GetGeometry(conn, xproto.Drawable(window)).Reply()
 	if err != nil {
-		log.Printf("Failed to get window geometry: %s", err)
+		return false
 	}
 
 	// Calculate the center of the window
@@ -149,11 +153,13 @@ func centerMouseOnWindow(conn *xgb.Conn, window xproto.Window) {
 	).Check()
 
 	if err != nil {
-		log.Printf("failed to warp pointer: %s", err)
+		return false
 	}
+
+	return true
 }
 
-func raiseWindow(conn *xgb.Conn, window xproto.Window) {
+func raiseWindow(conn *xgb.Conn, window xproto.Window) bool {
 	// Configure the window to be raised (StackModeAbove puts it above all other windows)
 	err := xproto.ConfigureWindowChecked(
 		conn,
@@ -163,8 +169,10 @@ func raiseWindow(conn *xgb.Conn, window xproto.Window) {
 	).Check()
 
 	if err != nil {
-		log.Printf("Failed to raise window %s", err)
+		return false
 	}
+
+	return true
 }
 
 func (x *X11Interface) initialize(AppCodes map[xproto.Keycode]string) {

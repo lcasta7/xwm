@@ -37,6 +37,8 @@ func main() {
 				fallthrough
 			case 76:
 				fallthrough
+			case 68:
+				fallthrough
 			case 95:
 				{
 					appName, appExist := config.AppCodes[event.Detail]
@@ -52,7 +54,7 @@ func main() {
 					if collectionExist && appCollection.ContainsApp(currentlyFocused) {
 						nextWinId := appCollection.GoToNextApp(currentlyFocused)
 						xutil.ChangeWindow(nextWinId)
-					} else if collectionExist {
+					} else if collectionExist && appCollection.Size != 0 {
 						xutil.ChangeWindow(appCollection.Current.WindId)
 					} else {
 						launchApp(appName)
@@ -63,16 +65,12 @@ func main() {
 			{
 				className, err := xutil.GetWMClass(event.Window)
 				if err != nil {
-					for k, v := range apps {
-						if v.ContainsApp(xutil.GetCurrentlyFocused()) {
-							className = k
-						}
-					}
+					continue
 				}
 
-				if value, exist := apps[className]; exist {
+				if value, exist := apps[className]; exist && value.Size != 0 {
 					value.AddBeforeCurrent(event.Window)
-					go runCleanup(apps[className])
+					go runCleanup(value)
 				} else if slices.Contains(availableApps, className) {
 					apps[className] = utils.CreateNewAppCollection(event.Window)
 					go runCleanup(apps[className])
@@ -85,6 +83,10 @@ func main() {
 					if v.ContainsApp(event.Window) {
 						go deleteKey(v, k)
 					}
+				}
+
+				for _, v := range apps {
+					go runCleanup(v)
 				}
 			}
 		}

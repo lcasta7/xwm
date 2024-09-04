@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/BurntSushi/xgb/xproto"
+	"log"
 )
 
 type App struct {
@@ -31,6 +32,14 @@ func CreateNewAppCollection(win xproto.Window) *AppCollection {
 // this method will add a node before what's in current for the collection
 func (l *AppCollection) AddBeforeCurrent(newId xproto.Window) {
 	newApp := &App{WindId: newId}
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Print("Recovered from panic: ", r)
+			log.Printf("newId=%X l.Current=%X", newId, l.Current.WindId)
+			return
+		}
+	}()
 
 	newApp.prev = l.Current.prev
 	newApp.next = l.Current
