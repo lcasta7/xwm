@@ -4,12 +4,10 @@ import "github.com/BurntSushi/xgb/xproto"
 
 var AppCodes = map[xproto.Keycode]string{
 	68: "gnome-terminal",
+	69: "obsidian",
 
 	75: "vivaldi-stable",
 	76: "emacs",
-
-	95: "obsidian",
-	96: "",
 }
 
 func GetAppCodesValues() []string {

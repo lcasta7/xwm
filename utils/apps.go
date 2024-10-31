@@ -6,7 +6,7 @@ import (
 )
 
 type App struct {
-	WindId xproto.Window //todo change back to private
+	WindId xproto.Window
 	next   *App
 	prev   *App
 }

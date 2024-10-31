@@ -29,17 +29,13 @@ func main() {
 		switch event := ev.(type) {
 		case xproto.KeyReleaseEvent:
 			switch event.Detail {
-			case 96:
-				{
-					printApps()
-				}
+			case 68:
+				fallthrough
+			case 69:
+				fallthrough
 			case 75:
 				fallthrough
 			case 76:
-				fallthrough
-			case 68:
-				fallthrough
-			case 95:
 				{
 					appName, appExist := config.AppCodes[event.Detail]
 
