@@ -11,9 +11,9 @@ This is accomplished by binding apps to specific funtion keys that will:
 
 a. Open an app instance binded to that key if one is not already present 
 
-b. Switch to the last used app instance if one is already present 
+b. Switch to the last used app instance if one is already present and not focused
 
-c. Cycle between the app instances open if multiple exist 
+c. Cycle between the app instances open if multiple exist and an instance of the app is already focused
 
 The following gif will demostrate this functionality. In this example my F9 key is bounded to my web browser and F2 is bounded to my terminal.
 
