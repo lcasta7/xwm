@@ -1,3 +1,5 @@
+NOTE: This is no longer in use, I made a gnome extension for better integration with my DE and usage under wayland.
+
 This Project is meant to be a replication of Xah Lee's computing philosophy. You can read more about it [here.](http://xahlee.info/linux/why_tiling_window_manager_sucks.html)
 
 My reasoning for writing this in go, was because I wanted a system that would work on any UNIX based X11 environment. 
